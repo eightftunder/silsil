@@ -1,0 +1,13 @@
+{
+  "name": "needlelog",
+  "short_name": "needlelog",
+  "description": "뜨개질 프로젝트 노트",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#faf9f7",
+  "theme_color": "#faf9f7",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "app_icon_needlelog.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>needlelog</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="needlelog">
+<meta name="theme-color" content="#faf9f7">
+<link rel="apple-touch-icon" href="app_icon_needlelog.png">
+<link rel="manifest" href="manifest.json">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#faf9f7;--surface:#ffffff;
+  --border:rgba(0,0,0,0.08);--border-h:rgba(0,0,0,0.15);
+  --acc:#b5573f;--acc-l:#f5e9e5;
+  --tp:#1a1a1a;--ts:#6b6b6b;--tt:#aaaaaa;
+  --sans:'Pretendard Variable','Pretendard',-apple-system,sans-serif;
+  --r:12px;--rs:8px;--max:720px;
+  --status-notstarted:#aaaaaa;--status-progress:#c98a3e;--status-done:#4a8f5c;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#141414;--surface:#1e1e1e;--border:rgba(255,255,255,0.08);--border-h:rgba(255,255,255,0.16);--tp:#f0f0f0;--ts:#999;--tt:#555;--acc:#d97b60;--acc-l:#3a2620;}
+}
+html{font-size:16px;-webkit-text-size-adjust:100%;}
+body{font-family:var(--sans);background:var(--bg);color:var(--tp);min-height:100vh;line-height:1.6;padding-bottom:env(safe-area-inset-bottom);}
+.screen{display:none;}.screen.active{display:block;}
+.page{max-width:var(--max);margin:0 auto;padding:0 20px;}
+
+/* ── topbar ── */
+.topbar{display:flex;align-items:center;gap:10px;padding:20px 0 18px;border-bottom:0.5px solid var(--border);margin-bottom:24px;position:sticky;top:0;background:var(--bg);z-index:10;}
+.topbar-title{font-size:17px;font-weight:600;color:var(--tp);flex:1;display:flex;align-items:center;gap:8px;}
+.topbar-title .stitch-mark{color:var(--acc);font-size:14px;}
+.btn-back{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ts);background:none;border:none;cursor:pointer;padding:4px 0;font-family:var(--sans);}
+.btn-back:hover{color:var(--tp);}
+.back-chevron{font-size:20px;line-height:1;display:inline-block;}
+.btn-icon{display:flex;align-items:center;justify-content:center;width:34px;height:34px;color:var(--ts);background:none;border:none;border-radius:var(--rs);cursor:pointer;flex-shrink:0;}
+.btn-icon:hover{background:var(--acc-l);color:var(--acc);}
+.btn-icon svg{width:19px;height:19px;}
+.btn-icon.danger:hover{background:rgba(192,57,43,.08);color:#c0392b;}
+
+/* ── project grid ── */
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:40px;}
+.project-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:border-color .15s,transform .1s;user-select:none;}
+.project-card:hover{border-color:var(--border-h);}
+.project-card:active{transform:scale(.98);}
+.project-thumb{width:100%;aspect-ratio:1;background:var(--acc-l);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--acc);}
+.project-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.project-thumb svg{width:32px;height:32px;opacity:.5;}
+.project-info{padding:12px 14px 14px;}
+.project-title{font-size:14px;font-weight:600;color:var(--tp);margin-bottom:6px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.project-meta-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tt);}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.status-dot.notstarted{background:var(--status-notstarted);}
+.status-dot.progress{background:var(--status-progress);}
+.status-dot.done{background:var(--status-done);}
+
+.empty-state{text-align:center;padding:80px 20px;color:var(--tt);}
+.empty-state svg{width:40px;height:40px;margin-bottom:14px;opacity:.4;}
+.empty-state p{font-size:14px;}
+
+.fab{position:fixed;right:24px;bottom:calc(24px + env(safe-area-inset-bottom));width:52px;height:52px;border-radius:50%;background:var(--acc);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:20;}
+.fab svg{width:24px;height:24px;}
+.fab:active{transform:scale(.94);}
+
+/* ── search & filter ── */
+.search-wrap{position:relative;margin-bottom:16px;}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--tt);pointer-events:none;}
+.search-input{width:100%;padding:10px 12px 10px 36px;font-family:var(--sans);font-size:14px;color:var(--tp);background:var(--surface);border:0.5px solid var(--border-h);border-radius:var(--rs);outline:none;}
+.search-input:focus{border-color:var(--acc);}
+.filter-chips{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+.chip{font-size:12px;color:var(--ts);background:var(--surface);border:0.5px solid var(--border-h);border-radius:20px;padding:6px 13px;cursor:pointer;white-space:nowrap;}
+.chip.active{background:var(--acc);color:#fff;border-color:var(--acc);}
+
+/* ── detail screen ── */
+.detail-hero{width:100%;border-radius:var(--r);overflow:hidden;margin-bottom:20px;background:var(--acc-l);}
+.detail-hero-scroll{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;-webkit-overflow-scrolling:touch;}
+.detail-hero-scroll::-webkit-scrollbar{display:none;}
+.detail-hero-img{flex:0 0 100%;scroll-snap-align:start;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer;}
+.detail-hero-empty{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;color:var(--acc);}
+.detail-hero-empty svg{width:36px;height:36px;opacity:.4;}
+.img-dots{display:flex;justify-content:center;gap:5px;margin-top:8px;}
+.img-dot{width:5px;height:5px;border-radius:50%;background:var(--border-h);}
+.img-dot.active{background:var(--acc);}
+
+.detail-title{font-size:22px;font-weight:700;color:var(--tp);line-height:1.4;margin-bottom:14px;}
+.detail-status-row{display:flex;align-items:center;gap:8px;margin-bottom:18px;}
+.status-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ts);border:0.5px solid var(--border-h);border-radius:20px;padding:5px 12px;}
+
+.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:0.5px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-bottom:24px;}
+.spec-item{background:var(--surface);padding:12px 14px;}
+.spec-label{font-size:11px;color:var(--tt);margin-bottom:4px;}
+.spec-value{font-size:13.5px;color:var(--tp);word-break:break-word;}
+.spec-value a{color:var(--acc);text-decoration:none;}
+.spec-value a:hover{text-decoration:underline;}
+
+.detail-body{font-size:14px;line-height:1.9;color:var(--tp);word-break:keep-all;overflow-wrap:break-word;white-space:pre-wrap;margin-bottom:32px;}
+
+.section-label{font-size:12px;color:var(--tt);margin-bottom:10px;font-weight:600;letter-spacing:.02em;}
+
+/* ── write/edit form ── */
+.form-group{margin-bottom:18px;}
+.form-label{font-size:13px;color:var(--ts);margin-bottom:8px;display:block;font-weight:500;}
+textarea,input[type="text"],input[type="date"],select{font-family:var(--sans);font-size:14px;color:var(--tp);background:var(--surface);border:0.5px solid var(--border-h);border-radius:var(--rs);padding:11px 13px;width:100%;outline:none;transition:border-color .15s;-webkit-appearance:none;}
+textarea:focus,input[type="text"]:focus,input[type="date"]:focus,select:focus{border-color:var(--acc);}
+textarea{resize:vertical;line-height:1.8;min-height:200px;font-size:14.5px;}
+.form-row{display:flex;gap:10px;}
+.form-row .form-group{flex:1;}
+
+.status-select-row{display:flex;gap:8px;}
+.status-opt{flex:1;text-align:center;padding:10px 8px;border:0.5px solid var(--border-h);border-radius:var(--rs);font-size:13px;color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.status-opt.selected{border-color:var(--acc);color:var(--acc);background:var(--acc-l);font-weight:600;}
+
+.img-upload-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:10px;}
+.img-upload-item{position:relative;aspect-ratio:1;border-radius:var(--rs);overflow:hidden;background:var(--acc-l);}
+.img-upload-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.img-upload-item .img-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.img-upload-item .img-del svg{width:12px;height:12px;}
+.img-upload-item.uploading{display:flex;align-items:center;justify-content:center;}
+.img-upload-item .spinner{width:18px;height:18px;border:2px solid var(--border-h);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;}
+.img-add-btn{aspect-ratio:1;border-radius:var(--rs);border:1.5px dashed var(--border-h);background:none;display:flex;align-items:center;justify-content:center;color:var(--tt);cursor:pointer;}
+.img-add-btn svg{width:22px;height:22px;}
+.img-add-btn:hover{border-color:var(--acc);color:var(--acc);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.primary-btn{width:100%;padding:13px;font-family:var(--sans);font-size:14.5px;font-weight:600;color:#fff;background:var(--acc);border:none;border-radius:var(--rs);cursor:pointer;}
+.primary-btn:active{opacity:.85;}
+.primary-btn:disabled{opacity:.5;cursor:default;}
+.secondary-btn{width:100%;padding:12px;font-family:var(--sans);font-size:13.5px;color:var(--ts);background:none;border:0.5px solid var(--border-h);border-radius:var(--rs);cursor:pointer;}
+
+.form-actions{display:flex;gap:10px;margin-top:28px;margin-bottom:40px;}
+.form-actions .primary-btn{flex:1;}
+
+/* ── context menu / confirm ── */
+.ctx-menu{display:none;position:fixed;z-index:200;background:var(--surface);border:0.5px solid var(--border-h);border-radius:var(--r);overflow:hidden;min-width:130px;box-shadow:0 4px 16px rgba(0,0,0,.12);}
+.ctx-menu.open{display:block;}
+.ctx-menu button{display:block;width:100%;padding:11px 16px;text-align:left;font-family:var(--sans);font-size:14px;color:var(--tp);background:none;border:none;cursor:pointer;}
+.ctx-menu button:hover{background:var(--bg);}
+.ctx-menu button.del{color:#c0392b;}
+.ctx-menu button+button{border-top:0.5px solid var(--border);}
+
+.confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.confirm-bg.open{display:flex;}
+.confirm-box{background:var(--surface);border-radius:var(--r);padding:22px;max-width:300px;width:100%;}
+.confirm-box p{font-size:14px;color:var(--tp);margin-bottom:18px;line-height:1.5;}
+.confirm-actions{display:flex;gap:8px;}
+.confirm-actions button{flex:1;padding:10px;font-family:var(--sans);font-size:13.5px;border-radius:var(--rs);border:none;cursor:pointer;}
+.confirm-cancel{background:var(--acc-l);color:var(--ts);}
+.confirm-ok{background:#c0392b;color:#fff;}
+
+/* ── lightbox ── */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:400;align-items:center;justify-content:center;}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:92vw;max-height:88vh;object-fit:contain;}
+.lightbox-close{position:absolute;top:calc(20px + env(safe-area-inset-top));right:20px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.lightbox-close svg{width:18px;height:18px;}
+
+/* ── toast ── */
+#sync-toast{display:none;position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--tp);color:var(--bg);font-size:13px;padding:8px 18px;border-radius:20px;z-index:500;white-space:nowrap;font-family:var(--sans);}
+
+/* ── setup screen ── */
+.setup-section{margin-bottom:28px;padding-bottom:24px;border-bottom:0.5px solid var(--border);}
+.setup-section:last-child{border-bottom:none;}
+.setup-hint{font-size:12px;color:var(--tt);margin-top:6px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<!-- ① 프로젝트 목록 화면 -->
+<div class="screen active" id="s-list">
+<div class="page">
+  <div class="topbar">
+    <span class="topbar-title"><span class="stitch-mark">◈</span> needlelog</span>
+    <button class="btn-icon" id="btn-setup" aria-label="설정">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009.09 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9.09a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852 1 1.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" class="search-input" id="search-input" placeholder="프로젝트 검색..." oninput="renderList()">
+  </div>
+  <div class="filter-chips" id="filter-chips">
+    <button class="chip active" data-status="all" onclick="setFilter('all')">전체</button>
+    <button class="chip" data-status="notstarted" onclick="setFilter('notstarted')">시작 전</button>
+    <button class="chip" data-status="progress" onclick="setFilter('progress')">진행중</button>
+    <button class="chip" data-status="done" onclick="setFilter('done')">완성</button>
+  </div>
+
+  <div id="list-content"></div>
+</div>
+
+<button class="fab" onclick="goCreate()" aria-label="새 프로젝트">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+</div>
+
+<!-- ② 프로젝트 상세 화면 -->
+<div class="screen" id="s-detail">
+<div class="page">
+  <div class="topbar">
+    <button class="btn-back" id="detail-back"><span class="back-chevron">‹</span> 목록</button>
+    <span style="flex:1"></span>
+    <button class="btn-icon" onclick="openDetailCtx(event)" aria-label="더보기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
+    </button>
+  </div>
+
+  <div id="detail-content"></div>
+</div>
+</div>
+
+<!-- ③ 작성/수정 화면 -->
+<div class="screen" id="s-edit">
+<div class="page">
+  <div class="topbar">
+    <button class="btn-back" id="edit-back"><span class="back-chevron">‹</span> 취소</button>
+    <span class="topbar-title" id="edit-title-label">새 프로젝트</span>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">제목</label>
+    <input type="text" id="f-title" placeholder="예: 아란 스웨터">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">진행상태</label>
+    <div class="status-select-row" id="status-select-row">
+      <div class="status-opt" data-status="notstarted" onclick="selectStatus('notstarted')"><span class="status-dot notstarted"></span> 시작 전</div>
+      <div class="status-opt" data-status="progress" onclick="selectStatus('progress')"><span class="status-dot progress"></span> 진행중</div>
+      <div class="status-opt" data-status="done" onclick="selectStatus('done')"><span class="status-dot done"></span> 완성</div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">실 종류</label>
+      <input type="text" id="f-yarn" placeholder="예: 캐시미어 4합">
+    </div>
+    <div class="form-group">
+      <label class="form-label">바늘 사이즈</label>
+      <input type="text" id="f-needle" placeholder="예: 4.5mm">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">난이도</label>
+      <select id="f-difficulty">
+        <option value="">선택 안 함</option>
+        <option value="쉬움">쉬움</option>
+        <option value="보통">보통</option>
+        <option value="어려움">어려움</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">시작한 날짜</label>
+      <input type="date" id="f-startdate">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">도안 (링크 또는 텍스트)</label>
+    <input type="text" id="f-pattern" placeholder="URL 또는 도안 이름/메모">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">사진</label>
+    <div class="img-upload-grid" id="img-upload-grid">
+      <button class="img-add-btn" id="img-add-btn" onclick="triggerImgUpload()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </button>
+    </div>
+    <input type="file" id="img-file-input" accept="image/*" capture="environment" multiple style="display:none" onchange="handleImgSelect(event)">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">뜨는 법 / 팁 / 변형 기록</label>
+    <textarea id="f-notes" placeholder="단계별로 자유롭게 적어주세요..."></textarea>
+  </div>
+
+  <div class="form-actions">
+    <button class="primary-btn" id="save-btn" onclick="saveProject()">저장</button>
+  </div>
+</div>
+</div>
+
+<!-- ④ 설정 화면 -->
+<div class="screen" id="s-setup">
+<div class="page">
+  <div class="topbar">
+    <button class="btn-back" id="setup-back"><span class="back-chevron">‹</span></button>
+    <span class="topbar-title">설정</span>
+  </div>
+
+  <div class="setup-section">
+    <label class="form-label">GitHub Personal Access Token</label>
+    <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+    <div class="setup-hint">repo 권한 필요. 로컬스토리지에만 저장되며, 한 번 입력하면 계속 유지돼요.</div>
+    <button class="primary-btn" style="margin-top:14px" onclick="saveGhToken()">저장 및 동기화</button>
+    <div id="sync-status" style="margin-top:14px;font-size:13px;color:var(--ts);text-align:center"></div>
+  </div>
+
+  <div class="setup-section">
+    <div class="form-label" style="margin-bottom:12px">데이터</div>
+    <button class="secondary-btn" onclick="forcePull()" style="margin-bottom:8px">GitHub에서 불러오기 (덮어쓰기)</button>
+    <button class="secondary-btn" onclick="forcePush()">로컬 → GitHub 올리기 (덮어쓰기)</button>
+  </div>
+</div>
+</div>
+
+<!-- 컨텍스트 메뉴 -->
+<div class="ctx-menu" id="ctx-menu">
+  <button onclick="ctxEdit()">수정</button>
+  <button class="del" onclick="ctxDelete()">삭제</button>
+</div>
+
+<!-- 삭제 확인 -->
+<div class="confirm-bg" id="confirm-bg">
+<div class="confirm-box">
+  <p id="confirm-msg">삭제할까요?</p>
+  <div class="confirm-actions">
+    <button class="confirm-cancel" onclick="closeConfirm()">취소</button>
+    <button class="confirm-ok" id="confirm-ok-btn">삭제</button>
+  </div>
+</div>
+</div>
+
+<!-- 이미지 라이트박스 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox(event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<div id="sync-toast"></div>
+
+<script>
+// ══════════════════════════════════════
+// needlelog — 데이터 모델 & 상태
+// ══════════════════════════════════════
+let db = { projects: [] };
+let currentFilter = 'all';
+let editingId = null;      // 현재 수정 중인 프로젝트 id (null = 새 프로젝트)
+let editingImages = [];    // 작성 화면에서 현재 첨부된 이미지 목록 [{id, url}]
+let ctxTargetId = null;    // 컨텍스트 메뉴 대상 프로젝트 id
+let curLightboxImgs = [];
+let curLightboxIdx = 0;
+
+function uid(){ return crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(36).slice(2); }
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function save(){
+  localStorage.setItem('needlelog_db', JSON.stringify(db));
+  syncToGitHub();
+}
+
+function load(){
+  try{
+    const r = localStorage.getItem('needlelog_db');
+    if(r){ db = JSON.parse(r); if(!db.projects) db.projects=[]; return; }
+  }catch(e){}
+  db = { projects: [] };
+}
+
+// ══════════════════════════════════════
+// 화면 전환
+// ══════════════════════════════════════
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+document.getElementById('detail-back').onclick = ()=>{ show('s-list'); renderList(); };
+document.getElementById('edit-back').onclick = ()=>{
+  if(editingImages.length || document.getElementById('f-title').value){
+    showConfirm('작성 중인 내용이 사라집니다. 취소할까요?', ()=>{ closeConfirm(); show('s-list'); renderList(); });
+  } else {
+    show('s-list'); renderList();
+  }
+};
+document.getElementById('btn-setup').onclick = goSetup;
+document.getElementById('setup-back').onclick = ()=>{ show('s-list'); renderList(); };
+
+// ══════════════════════════════════════
+// 목록 화면
+// ══════════════════════════════════════
+function setFilter(status){
+  currentFilter = status;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.status===status));
+  renderList();
+}
+
+const STATUS_LABEL = { notstarted:'시작 전', progress:'진행중', done:'완성' };
+
+function renderList(){
+  const container = document.getElementById('list-content');
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+
+  let list = db.projects.slice().sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0));
+
+  if(currentFilter !== 'all') list = list.filter(p=>p.status===currentFilter);
+  if(q) list = list.filter(p=>
+    (p.title||'').toLowerCase().includes(q) ||
+    (p.yarn||'').toLowerCase().includes(q) ||
+    (p.pattern||'').toLowerCase().includes(q) ||
+    (p.notes||'').toLowerCase().includes(q)
+  );
+
+  if(!list.length){
+    container.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a5 5 0 015 5c0 2-1 3-2 4l-1 1M12 2a5 5 0 00-5 5c0 2 1 3 2 4l1 1M12 12v10M8 22h8"/></svg>
+        <p>${q||currentFilter!=='all' ? '조건에 맞는 프로젝트가 없어요.' : '아직 프로젝트가 없어요.<br>+ 버튼으로 새로 시작해보세요.'}</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="project-grid">${list.map(p=>{
+    const thumb = p.images && p.images[0]
+      ? `<img src="${imgUrl(p.images[0])}" loading="lazy" alt="">`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 2a5 5 0 015 5c0 2-1 3-2 4l-1 1M12 2a5 5 0 00-5 5c0 2 1 3 2 4l1 1M12 12v10M8 22h8"/></svg>`;
+    return `
+    <div class="project-card" onclick="openDetail('${p.id}')">
+      <div class="project-thumb">${thumb}</div>
+      <div class="project-info">
+        <div class="project-title">${esc(p.title||'제목 없음')}</div>
+        <div class="project-meta-row">
+          <span class="status-dot ${p.status||'notstarted'}"></span>
+          <span>${STATUS_LABEL[p.status]||'시작 전'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ══════════════════════════════════════
+// 상세 화면
+// ══════════════════════════════════════
+function openDetail(id){
+  const p = db.projects.find(x=>x.id===id);
+  if(!p) return;
+  ctxTargetId = id;
+  const c = document.getElementById('detail-content');
+
+  const imgs = p.images || [];
+  let heroHtml = '';
+  if(imgs.length){
+    heroHtml = `
+      <div class="detail-hero">
+        <div class="detail-hero-scroll" id="hero-scroll">
+          ${imgs.map((im,i)=>`<img class="detail-hero-img" src="${imgUrl(im)}" data-idx="${i}" alt="">`).join('')}
+        </div>
+      </div>
+      ${imgs.length>1 ? `<div class="img-dots">${imgs.map((_,i)=>`<div class="img-dot ${i===0?'active':''}"></div>`).join('')}</div>` : ''}
+    `;
+  } else {
+    heroHtml = `<div class="detail-hero"><div class="detail-hero-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 2a5 5 0 015 5c0 2-1 3-2 4l-1 1M12 2a5 5 0 00-5 5c0 2 1 3 2 4l1 1M12 12v10M8 22h8"/></svg></div></div>`;
+  }
+
+  const specs = [
+    ['실 종류', p.yarn],
+    ['바늘 사이즈', p.needle],
+    ['난이도', p.difficulty],
+    ['시작한 날짜', p.startDate],
+  ].filter(([,v])=>v);
+
+  let patternHtml = '';
+  if(p.pattern){
+    const isUrl = /^https?:\/\//i.test(p.pattern.trim());
+    patternHtml = `<div class="spec-item" style="grid-column:1/-1"><div class="spec-label">도안</div><div class="spec-value">${isUrl?`<a href="${esc(p.pattern)}" target="_blank" rel="noopener">${esc(p.pattern)}</a>`:esc(p.pattern)}</div></div>`;
+  }
+
+  c.innerHTML = `
+    ${heroHtml}
+    <div class="detail-title">${esc(p.title||'제목 없음')}</div>
+    <div class="detail-status-row">
+      <span class="status-badge"><span class="status-dot ${p.status||'notstarted'}"></span>${STATUS_LABEL[p.status]||'시작 전'}</span>
+    </div>
+    ${specs.length||patternHtml ? `<div class="spec-grid">
+      ${specs.map(([l,v])=>`<div class="spec-item"><div class="spec-label">${l}</div><div class="spec-value">${esc(v)}</div></div>`).join('')}
+      ${patternHtml}
+    </div>` : ''}
+    ${p.notes ? `<div class="section-label">뜨는 법 · 팁 · 변형 기록</div><div class="detail-body">${esc(p.notes)}</div>` : ''}
+  `;
+
+  // hero scroll dots sync
+  const scrollEl = document.getElementById('hero-scroll');
+  if(scrollEl && imgs.length>1){
+    scrollEl.addEventListener('scroll', ()=>{
+      const idx = Math.round(scrollEl.scrollLeft / scrollEl.clientWidth);
+      document.querySelectorAll('.img-dot').forEach((d,i)=>d.classList.toggle('active', i===idx));
+    });
+  }
+  if(scrollEl){
+    const fullUrls = imgs.map(imgUrl);
+    scrollEl.querySelectorAll('.detail-hero-img').forEach(el=>{
+      el.addEventListener('click', ()=> openLightbox(fullUrls, Number(el.dataset.idx)));
+    });
+  }
+
+  show('s-detail');
+}
+
+function openLightbox(imgs, idx){
+  curLightboxImgs = imgs; curLightboxIdx = idx;
+  document.getElementById('lightbox-img').src = imgs[idx];
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(e){
+  if(e) e.stopPropagation();
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+// ══════════════════════════════════════
+// 컨텍스트 메뉴 / 삭제 확인
+// ══════════════════════════════════════
+function openDetailCtx(e){
+  e.stopPropagation();
+  const menu = document.getElementById('ctx-menu');
+  const rect = e.currentTarget.getBoundingClientRect();
+  menu.style.left = Math.max(12, rect.right - 130) + 'px';
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.classList.add('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.ctx-menu') && !e.target.closest('.btn-icon')) {
+    document.getElementById('ctx-menu').classList.remove('open');
+  }
+});
+function ctxEdit(){
+  document.getElementById('ctx-menu').classList.remove('open');
+  goEdit(ctxTargetId);
+}
+function ctxDelete(){
+  document.getElementById('ctx-menu').classList.remove('open');
+  showConfirm('이 프로젝트를 삭제할까요? 첨부된 사진도 함께 삭제돼요.', async ()=>{
+    closeConfirm();
+    const p = db.projects.find(x=>x.id===ctxTargetId);
+    if(p && p.images && p.images.length){
+      for(const im of p.images){ await ghDeleteImage(im); }
+    }
+    db.projects = db.projects.filter(x=>x.id!==ctxTargetId);
+    save();
+    show('s-list'); renderList();
+  });
+}
+function showConfirm(msg, onOk){
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-bg').classList.add('open');
+  document.getElementById('confirm-ok-btn').onclick = onOk;
+}
+function closeConfirm(){ document.getElementById('confirm-bg').classList.remove('open'); }
+
+// ══════════════════════════════════════
+// 작성 / 수정 화면
+// ══════════════════════════════════════
+function goCreate(){
+  editingId = null;
+  editingImages = [];
+  document.getElementById('edit-title-label').textContent = '새 프로젝트';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-yarn').value = '';
+  document.getElementById('f-needle').value = '';
+  document.getElementById('f-difficulty').value = '';
+  document.getElementById('f-startdate').value = '';
+  document.getElementById('f-pattern').value = '';
+  document.getElementById('f-notes').value = '';
+  selectStatus('notstarted');
+  renderImgGrid();
+  show('s-edit');
+}
+
+function goEdit(id){
+  const p = db.projects.find(x=>x.id===id);
+  if(!p) return;
+  editingId = id;
+  editingImages = (p.images||[]).slice();
+  document.getElementById('edit-title-label').textContent = '수정';
+  document.getElementById('f-title').value = p.title||'';
+  document.getElementById('f-yarn').value = p.yarn||'';
+  document.getElementById('f-needle').value = p.needle||'';
+  document.getElementById('f-difficulty').value = p.difficulty||'';
+  document.getElementById('f-startdate').value = p.startDate||'';
+  document.getElementById('f-pattern').value = p.pattern||'';
+  document.getElementById('f-notes').value = p.notes||'';
+  selectStatus(p.status||'notstarted');
+  renderImgGrid();
+  show('s-edit');
+}
+
+function selectStatus(status){
+  document.querySelectorAll('.status-opt').forEach(el=>el.classList.toggle('selected', el.dataset.status===status));
+  document.getElementById('status-select-row').dataset.value = status;
+}
+
+function saveProject(){
+  const title = document.getElementById('f-title').value.trim();
+  if(!title){ alert('제목을 입력해주세요.'); return; }
+
+  const data = {
+    title,
+    status: document.getElementById('status-select-row').dataset.value || 'notstarted',
+    yarn: document.getElementById('f-yarn').value.trim(),
+    needle: document.getElementById('f-needle').value.trim(),
+    difficulty: document.getElementById('f-difficulty').value,
+    startDate: document.getElementById('f-startdate').value,
+    pattern: document.getElementById('f-pattern').value.trim(),
+    notes: document.getElementById('f-notes').value,
+    images: editingImages.slice(),
+    updatedAt: Date.now(),
+  };
+
+  if(editingId){
+    const idx = db.projects.findIndex(x=>x.id===editingId);
+    if(idx>-1) db.projects[idx] = { ...db.projects[idx], ...data };
+  } else {
+    db.projects.push({ id: uid(), createdAt: Date.now(), ...data });
+  }
+
+  save();
+  show('s-list'); renderList();
+}
+
+// ══════════════════════════════════════
+// 이미지 업로드 + 압축 (클라이언트 사이드)
+// ══════════════════════════════════════
+const IMG_MAX_DIM = 1600;
+const IMG_QUALITY = 0.82;
+
+function triggerImgUpload(){ document.getElementById('img-file-input').click(); }
+
+function renderImgGrid(){
+  const grid = document.getElementById('img-upload-grid');
+  const addBtn = document.getElementById('img-add-btn');
+  grid.querySelectorAll('.img-upload-item').forEach(el=>el.remove());
+  editingImages.forEach(im=>{
+    const item = document.createElement('div');
+    item.className = 'img-upload-item';
+    item.innerHTML = `<img src="${imgUrl(im)}" alt=""><button class="img-del" onclick="removeEditingImage(event,'${im.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`;
+    grid.insertBefore(item, addBtn);
+  });
+}
+
+function removeEditingImage(e, imgId){
+  e.stopPropagation();
+  const im = editingImages.find(x=>x.id===imgId);
+  editingImages = editingImages.filter(x=>x.id!==imgId);
+  renderImgGrid();
+  if(im) ghDeleteImage(im); // 백그라운드에서 리포지토리에서도 제거
+}
+
+async function handleImgSelect(e){
+  const files = Array.from(e.target.files||[]);
+  e.target.value = ''; // 같은 파일 재선택 가능하도록
+  if(!files.length) return;
+
+  for(const file of files){
+    const placeholderId = uid();
+    addUploadingPlaceholder(placeholderId);
+    try{
+      const webpBlob = await compressImage(file, IMG_MAX_DIM, IMG_QUALITY);
+      const imgId = uid();
+      const filename = `${imgId}.webp`;
+      const ok = await ghUploadImage(filename, webpBlob);
+      removeUploadingPlaceholder(placeholderId);
+      if(ok){
+        editingImages.push({ id: imgId, path: `images/${filename}` });
+        renderImgGrid();
+      } else {
+        showToast('이미지 업로드 실패 — 설정에서 토큰 확인', 3000);
+      }
+    }catch(err){
+      console.error('이미지 처리 오류', err);
+      removeUploadingPlaceholder(placeholderId);
+      showToast('이미지 처리 실패', 2500);
+    }
+  }
+}
+
+function addUploadingPlaceholder(id){
+  const grid = document.getElementById('img-upload-grid');
+  const addBtn = document.getElementById('img-add-btn');
+  const item = document.createElement('div');
+  item.className = 'img-upload-item uploading';
+  item.id = 'upload-ph-'+id;
+  item.innerHTML = `<div class="spinner"></div>`;
+  grid.insertBefore(item, addBtn);
+}
+function removeUploadingPlaceholder(id){
+  const el = document.getElementById('upload-ph-'+id);
+  if(el) el.remove();
+}
+
+// 이미지를 캔버스로 리사이즈 + WebP 압축
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      img.onload = ()=>{
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          if(width > height){ height = Math.round(height * maxDim/width); width = maxDim; }
+          else { width = Math.round(width * maxDim/height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob=>{
+          if(blob) resolve(blob); else reject(new Error('canvas toBlob 실패'));
+        }, 'image/webp', quality);
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// 이미지 표시용 URL (raw.githubusercontent.com에서 직접 로드)
+function imgUrl(im){
+  if(!im) return '';
+  return `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${im.path}`;
+}
+
+// ══════════════════════════════════════
+// GitHub 동기화 — JSON 데이터
+// ══════════════════════════════════════
+const GH_OWNER = 'eightftunder';
+const GH_REPO = 'silsil';
+const GH_FILE = 'data.json';
+const GH_API_BASE = 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/';
+const GH_API = GH_API_BASE + GH_FILE;
+
+function getToken(){ return localStorage.getItem('gh_token')||''; }
+
+function showToast(msg, duration=2500){
+  const t = document.getElementById('sync-toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.style.display='none', duration);
+}
+function setSyncStatus(msg){
+  const el = document.getElementById('sync-status');
+  if(el) el.textContent = msg;
+}
+
+function b64EncodeUnicode(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b=>bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function b64DecodeUnicode(b64){
+  const bin = atob(b64.replace(/\n/g,''));
+  const bytes = Uint8Array.from(bin, c=>c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function ghGet(){
+  const token = getToken();
+  if(!token) return null;
+  try{
+    const res = await fetch(GH_API, { headers: { 'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json' } });
+    if(res.status===404) return { data:null, sha:null };
+    if(!res.ok){ console.error('ghGet status:', res.status); return null; }
+    const text = await res.text();
+    if(!text || !text.trim()) return null;
+    const json = JSON.parse(text);
+    if(!json.content) return { data:null, sha: json.sha||null };
+    const decoded = b64DecodeUnicode(json.content);
+    return { data: JSON.parse(decoded), sha: json.sha };
+  }catch(e){ console.error('ghGet error', e); return null; }
+}
+
+async function ghPut(data, sha){
+  const token = getToken();
+  if(!token) return false;
+  try{
+    const content = b64EncodeUnicode(JSON.stringify(data));
+    const body = { message:'update', content };
+    if(sha) body.sha = sha;
+    const res = await fetch(GH_API, {
+      method:'PUT',
+      headers:{ 'Authorization':'token '+token, 'Content-Type':'application/json', 'Accept':'application/vnd.github.v3+json' },
+      body: JSON.stringify(body)
+    });
+    if(res.ok){
+      try{ const rj = await res.json(); if(rj.content?.sha) ghSha = rj.content.sha; }catch(e){}
+    }
+    return res.ok;
+  }catch(e){ console.error('ghPut error', e); return false; }
+}
+
+let ghSha = null;
+let syncPending = false;
+let syncTimer = null;
+
+async function syncToGitHub(){
+  if(!getToken()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async ()=>{
+    if(syncPending) return;
+    syncPending = true;
+    showToast('저장 중...', 60000);
+    if(!ghSha){
+      const latest = await ghGet();
+      if(latest) ghSha = latest.sha;
+    }
+    const snapshot = JSON.parse(JSON.stringify(db));
+    const ok = await ghPut(snapshot, ghSha);
+    syncPending = false;
+    if(ok){
+      showToast('저장됨 ✓');
+    } else {
+      showToast('재시도 중...', 60000);
+      const latest = await ghGet();
+      if(latest){
+        ghSha = latest.sha;
+        const ok2 = await ghPut(snapshot, ghSha);
+        if(ok2){ showToast('저장됨 ✓'); }
+        else{ showToast('저장 실패 — 설정에서 토큰 확인', 4000); }
+      }
+    }
+  }, 1000);
+}
+
+async function loadFromGitHub(){
+  if(!getToken()) return false;
+  setSyncStatus('GitHub에서 불러오는 중...');
+  const result = await ghGet();
+  if(!result){ setSyncStatus('연결 실패'); return false; }
+  if(result.data){
+    db = result.data; if(!db.projects) db.projects=[];
+    ghSha = result.sha;
+    localStorage.setItem('needlelog_db', JSON.stringify(db));
+    setSyncStatus('');
+    return true;
+  }
+  setSyncStatus('첫 동기화 중...');
+  const ok = await ghPut(db, null);
+  if(ok){
+    const r2 = await ghGet();
+    if(r2) ghSha = r2.sha;
+    setSyncStatus('');
+    showToast('GitHub 연동 완료 ✓');
+    return true;
+  }
+  setSyncStatus('업로드 실패');
+  return false;
+}
+
+async function initWithGitHub(){
+  load();
+  renderList(); show('s-list');
+  if(getToken()){
+    const result = await ghGet();
+    if(result && result.data){
+      db = result.data; if(!db.projects) db.projects=[];
+      ghSha = result.sha;
+      localStorage.setItem('needlelog_db', JSON.stringify(db));
+      renderList();
+    } else if(result && !result.data){
+      await ghPut(db, null);
+      const r2 = await ghGet();
+      if(r2) ghSha = r2.sha;
+    }
+  }
+}
+
+// ══════════════════════════════════════
+// GitHub 동기화 — 이미지 (images/{uuid}.webp)
+// ══════════════════════════════════════
+async function ghUploadImage(filename, blob){
+  const token = getToken();
+  if(!token){ showToast('설정에서 GitHub 토큰을 먼저 입력해주세요.', 3000); return false; }
+  try{
+    const base64 = await blobToBase64(blob);
+    const url = GH_API_BASE + 'images/' + filename;
+    const res = await fetch(url, {
+      method:'PUT',
+      headers:{ 'Authorization':'token '+token, 'Content-Type':'application/json', 'Accept':'application/vnd.github.v3+json' },
+      body: JSON.stringify({ message:'add image '+filename, content: base64 })
+    });
+    return res.ok;
+  }catch(e){ console.error('ghUploadImage error', e); return false; }
+}
+
+async function ghDeleteImage(im){
+  const token = getToken();
+  if(!token || !im || !im.path) return false;
+  try{
+    const url = GH_API_BASE + im.path;
+    // 삭제하려면 현재 sha가 필요
+    const getRes = await fetch(url, { headers:{ 'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json' } });
+    if(!getRes.ok) return false;
+    const meta = await getRes.json();
+    const delRes = await fetch(url, {
+      method:'DELETE',
+      headers:{ 'Authorization':'token '+token, 'Content-Type':'application/json', 'Accept':'application/vnd.github.v3+json' },
+      body: JSON.stringify({ message:'delete image', sha: meta.sha })
+    });
+    return delRes.ok;
+  }catch(e){ console.error('ghDeleteImage error', e); return false; }
+}
+
+// ══════════════════════════════════════
+// 설정 화면
+// ══════════════════════════════════════
+function goSetup(){
+  document.getElementById('gh-token-input').value = getToken();
+  setSyncStatus('');
+  show('s-setup');
+}
+
+async function saveGhToken(){
+  const token = document.getElementById('gh-token-input').value.trim();
+  if(!token){ alert('토큰을 입력해주세요.'); return; }
+  localStorage.setItem('gh_token', token);
+  setSyncStatus('연결 중...');
+  const ok = await loadFromGitHub();
+  if(ok){ renderList(); show('s-list'); }
+}
+
+async function forcePull(){
+  if(!confirm('GitHub 데이터로 덮어쓸까요? 로컬 변경사항이 사라집니다.')) return;
+  setSyncStatus('불러오는 중...');
+  const result = await ghGet();
+  if(result && result.data){
+    db = result.data; if(!db.projects) db.projects=[];
+    ghSha = result.sha;
+    localStorage.setItem('needlelog_db', JSON.stringify(db));
+    setSyncStatus('완료'); showToast('GitHub에서 불러옴 ✓');
+    renderList();
+  } else setSyncStatus('실패');
+}
+
+async function forcePush(){
+  if(!confirm('로컬 데이터를 GitHub에 올릴까요? GitHub의 데이터가 덮어써집니다.')) return;
+  setSyncStatus('올리는 중...');
+  const ok = await ghPut(db, ghSha);
+  if(ok){
+    const r = await ghGet(); if(r) ghSha = r.sha;
+    setSyncStatus('완료'); showToast('GitHub에 올림 ✓');
+  } else setSyncStatus('실패');
+}
+
+// ══════════════════════════════════════
+// 시작
+// ══════════════════════════════════════
+initWithGitHub();
+
+</script>
+</body>
+</html>
