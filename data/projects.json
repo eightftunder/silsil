@@ -1,0 +1,21 @@
+{
+  "projects": [
+    {
+      "id": "662f76c0-e289-4213-875c-6379392141b8",
+      "title": "test",
+      "pattern": "테스트용",
+      "yarn": "test",
+      "needle": "2mm",
+      "difficulty": 3,
+      "status": "todo",
+      "startDate": "2026-07-08",
+      "notes": "xxxxx",
+      "images": [
+        "images/2fdc62dc-e4d8-4893-8102-42ac279c8b78.jpg",
+        "images/29eedd29-4b50-4473-8924-1a657fe845d8.jpg"
+      ],
+      "createdAt": 1783541921074,
+      "updatedAt": 1783542081027
+    }
+  ]
+}
