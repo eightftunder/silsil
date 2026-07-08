@@ -12,9 +12,12 @@
 <meta name="apple-mobile-web-app-title" content="silsil">
 <link rel="apple-touch-icon" href="app_icon.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#faf9f7">
+<meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1a18" media="(prefers-color-scheme: dark)">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600&display=swap">
 
 <style>
 :root{
@@ -24,16 +27,41 @@
   --ink-soft:#6e675e;
   --ink-faint:#a39b90;
   --line:#e8e3dc;
-  --accent:#b5573f;
-  --accent-soft:#f3e2dc;
-  --done:#5b7a5e;
-  --done-soft:#e2ebe3;
-  --wip:#b5573f;
-  --wip-soft:#f3e2dc;
+  --accent:#2d2a26;
+  --accent-soft:#eae7e2;
+  --done:#faf9f7;
+  --done-soft:#2d2a26;
+  --wip:#2d2a26;
+  --wip-soft:#dcd7cf;
   --todo:#8b8378;
   --todo-soft:#eeebe6;
   --shadow:0 1px 3px rgba(45,42,38,.06),0 4px 14px rgba(45,42,38,.05);
   --radius:14px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1a18;
+    --card:#262421;
+    --ink:#eae6df;
+    --ink-soft:#a8a096;
+    --ink-faint:#6e675e;
+    --line:#37332e;
+    --accent:#eae6df;
+    --accent-soft:#33302b;
+    --done:#1c1a18;
+    --done-soft:#eae6df;
+    --wip:#eae6df;
+    --wip-soft:#44403a;
+    --todo:#a8a096;
+    --todo-soft:#2e2b27;
+    --shadow:0 1px 3px rgba(0,0,0,.25),0 4px 14px rgba(0,0,0,.2);
+  }
+  .sync-dot.ok{background:#7fa583}
+  .sync-dot.pending{background:#d9a13f}
+  .sync-dot.err{background:#d06552}
+  .img-grid .ph .rm{background:rgba(0,0,0,.6)}
+  .danger-btn{border-color:#6b4038;color:#d98274}
+  .danger-btn:active{background:#332320}
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
@@ -56,8 +84,8 @@ img{display:block}
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line);
 }
-.topbar h1{font-size:19px;font-weight:800;letter-spacing:-.02em}
-.topbar h1 em{font-style:normal;color:var(--accent)}
+.topbar h1{font-family:Outfit,"Pretendard Variable",sans-serif;font-size:20px;font-weight:600;letter-spacing:.01em}
+.topbar h1 em{font-style:normal;font-weight:300}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-faint);flex:none;transition:background .3s}
 .sync-dot.ok{background:var(--done)}
 .sync-dot.pending{background:#d9a13f}
@@ -71,10 +99,11 @@ img{display:block}
 .icon-btn:active{background:var(--line)}
 .icon-btn svg{width:21px;height:21px}
 .add-btn{
-  background:var(--accent);color:#fff;border-radius:11px;
-  height:38px;padding:0 14px;font-weight:700;font-size:14px;
-  display:flex;align-items:center;gap:5px;
+  background:var(--accent);color:var(--bg);border-radius:11px;
+  width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;
 }
+.add-btn svg{width:20px;height:20px}
 .add-btn:active{filter:brightness(.92)}
 
 /* ---------- 필터 칩 ---------- */
@@ -241,7 +270,9 @@ img{display:block}
   <button class="icon-btn" id="settingsBtn" aria-label="설정">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
-  <button class="add-btn" id="addBtn">＋ 새 프로젝트</button>
+  <button class="add-btn" id="addBtn" aria-label="새 프로젝트">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
 </header>
 
 <nav class="chips" id="chips"></nav>
@@ -250,9 +281,13 @@ img{display:block}
 <!-- 상세 -->
 <div class="sheet" id="detailSheet">
   <div class="sheet-head">
-    <button class="text-btn muted" data-close="detailSheet">‹ 목록</button>
+    <button class="icon-btn" data-close="detailSheet" aria-label="목록으로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
     <div class="s-title" id="dTitleBar"></div>
-    <button class="text-btn" id="editBtn">편집</button>
+    <button class="icon-btn" id="editBtn" aria-label="편집">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+    </button>
   </div>
   <div class="sheet-body">
     <div class="gallery" id="dGallery"></div>
@@ -269,25 +304,30 @@ img{display:block}
 <!-- 편집 -->
 <div class="sheet" id="editSheet">
   <div class="sheet-head">
-    <button class="text-btn muted" id="editCancel">취소</button>
+    <button class="icon-btn" id="editCancel" aria-label="취소">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
     <div class="s-title" id="eTitleBar">새 프로젝트</div>
-    <button class="text-btn" id="editSave">저장</button>
+    <button class="icon-btn" id="editSave" aria-label="저장" style="color:var(--accent)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </button>
   </div>
   <div class="sheet-body">
     <div class="form">
       <div class="field"><label>제목</label>
-        <input type="text" id="fTitle" placeholder="예: 아란 카디건" autocomplete="off"></div>
-      <div class="field"><label>도안 (링크 또는 텍스트)</label>
-        <input type="text" id="fPattern" placeholder="URL 또는 도안 이름/출처" autocomplete="off"></div>
+        <input type="text" id="fTitle" autocomplete="off"></div>
+      <div class="field"><label>도안</label>
+        <input type="text" id="fPattern" autocomplete="off"></div>
       <div class="row2">
         <div class="field"><label>실 종류</label>
-          <input type="text" id="fYarn" placeholder="예: 램스울 DK" autocomplete="off"></div>
+          <input type="text" id="fYarn" autocomplete="off"></div>
         <div class="field"><label>바늘 사이즈</label>
-          <input type="text" id="fNeedle" placeholder="예: 4.0mm" autocomplete="off"></div>
+          <input type="text" id="fNeedle" autocomplete="off"></div>
       </div>
+      <div class="field"><label>난이도</label><div class="diff-pick" id="fDiff"></div></div>
       <div class="row2">
-        <div class="field"><label>난이도</label><div class="diff-pick" id="fDiff"></div></div>
         <div class="field"><label>시작한 날짜</label><input type="date" id="fDate"></div>
+        <div class="field"><label>완성한 날짜</label><input type="date" id="fEnd"></div>
       </div>
       <div class="field"><label>진행상태</label>
         <div class="seg" id="fStatus">
@@ -300,8 +340,8 @@ img{display:block}
         <div class="img-grid" id="fImgs"></div>
         <input type="file" id="fileInput" accept="image/*" multiple hidden>
       </div>
-      <div class="field"><label>기록 — 뜨는 법 · 팁 · 도안 · 변형</label>
-        <textarea id="fNotes" placeholder="단계별로 자유롭게 길게 적어도 돼요."></textarea></div>
+      <div class="field"><label>기록</label>
+        <textarea id="fNotes"></textarea></div>
       <div class="danger-zone" id="deleteZone" hidden>
         <button class="danger-btn" id="deleteBtn">이 프로젝트 삭제</button>
       </div>
@@ -312,7 +352,9 @@ img{display:block}
 <!-- 설정 -->
 <div class="sheet" id="settingsSheet">
   <div class="sheet-head">
-    <button class="text-btn muted" data-close="settingsSheet">‹ 닫기</button>
+    <button class="icon-btn" data-close="settingsSheet" aria-label="닫기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
     <div class="s-title">설정</div>
   </div>
   <div class="sheet-body">
@@ -320,7 +362,7 @@ img{display:block}
       <div class="box">
         <strong>GitHub 연결</strong>
         <p>데이터와 사진은 <code>eightftunder/silsil</code> repo에 저장돼요. Contents 읽기/쓰기 권한이 있는 fine-grained token을 한 번만 넣으면 이 기기에 저장돼요.</p>
-        <input type="password" id="tokenInput" placeholder="github_pat_..." autocomplete="off">
+        <input type="password" id="tokenInput" autocomplete="off">
         <button class="primary" id="tokenSave">토큰 저장 & 연결 확인</button>
         <div class="status-line" id="connStatus"></div>
       </div>
@@ -541,7 +583,7 @@ function renderGrid(){
     .sort((a,b) => (b.updatedAt||0)-(a.updatedAt||0));
   const g = $('grid');
   if(!list.length){
-    g.innerHTML = `<div class="empty"><strong>${filter==='all'?'아직 프로젝트가 없어요':'여기엔 아직 없어요'}</strong><br>오른쪽 위 ＋ 새 프로젝트로 시작해요.</div>`;
+    g.innerHTML = `<div class="empty"><strong>${filter==='all'?'아직 프로젝트가 없어요':'여기엔 아직 없어요'}</strong><br>오른쪽 위 ＋ 버튼으로 시작해요.</div>`;
     return;
   }
   g.innerHTML = list.map(p=>`
@@ -583,6 +625,7 @@ function openDetail(id){
   if(p.yarn) rows.push(['실', esc(p.yarn)]);
   if(p.needle) rows.push(['바늘', esc(p.needle)]);
   if(p.startDate) rows.push(['시작', esc(p.startDate)]);
+  if(p.endDate) rows.push(['완성', esc(p.endDate)]);
   $('dSpec').innerHTML = rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('');
   $('dSpec').style.display = rows.length ? '' : 'none';
   $('dNotes').textContent = p.notes || '';
@@ -599,7 +642,7 @@ $('editBtn').addEventListener('click', ()=>{
 /* ================= 편집 ================= */
 function blankProject(){
   return {id:uid(), title:'', pattern:'', yarn:'', needle:'', difficulty:0,
-    status:'todo', startDate:'', notes:'', images:[],
+    status:'todo', startDate:'', endDate:'', notes:'', images:[],
     createdAt:Date.now(), updatedAt:Date.now()};
 }
 function openEdit(p){
@@ -611,6 +654,7 @@ function openEdit(p){
   $('fYarn').value = editing.yarn;
   $('fNeedle').value = editing.needle;
   $('fDate').value = editing.startDate;
+  $('fEnd').value = editing.endDate || '';
   $('fNotes').value = editing.notes;
   renderDiff(); renderStatusSeg(); renderEditImgs();
   $('deleteZone').hidden = editingIsNew;
@@ -695,6 +739,7 @@ $('editSave').addEventListener('click', ()=>{
   editing.yarn = $('fYarn').value.trim();
   editing.needle = $('fNeedle').value.trim();
   editing.startDate = $('fDate').value;
+  editing.endDate = $('fEnd').value;
   editing.notes = $('fNotes').value;
   editing.updatedAt = Date.now();
   if(editingIsNew) state.projects.push(editing);
