@@ -16,6 +16,23 @@
       ],
       "createdAt": 1783541921074,
       "updatedAt": 1783542081027
+    },
+    {
+      "id": "c237c1fc-077c-47b7-aa7e-ac4ecb53299f",
+      "title": "Granny Stitch Bucket Hat",
+      "pattern": "Quinnbender",
+      "yarn": "Hobbii rainbow 8/4",
+      "needle": "2.5mm",
+      "difficulty": 0,
+      "status": "wip",
+      "startDate": "2026-07-25",
+      "endDate": "",
+      "notes": "For Lawrence \n\nMore increase rows\nSc at the end of the repeat row\nBLO for the first row of brim\n\nColour \n52-32-29-100-",
+      "images": [
+        "images/c06ccab9-e396-4fd0-a76e-fdc8a0dd755b.jpg"
+      ],
+      "createdAt": 1785033961591,
+      "updatedAt": 1785034095948
     }
   ]
 }
